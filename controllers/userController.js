@@ -23,15 +23,17 @@ const userController = {
             .catch((err) => {
                 console.log(err);
                 return res.status(500).json(err);
-            });
-        },
+            }
+        );
+    },
 
     // Create a new user
     createUser(req, res) {
         User.create(req.body)
             .then((userData) => res.json(userData))
-            .catch((err) => res.status(500).json(err));
-        },
+            .catch((err) => res.status(500).json(err)
+        );
+    },
 
     // Update a user
     updateUser(req, res) {
@@ -106,8 +108,6 @@ const userController = {
         .catch((err) => res.status(500).json(err));
     },
 };
-
-
 
 // Export userController
 module.exports = userController;
