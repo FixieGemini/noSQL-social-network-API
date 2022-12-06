@@ -1,50 +1,84 @@
-const { User } = require('../models');
+const { User, Thought } = require('../models');
 
 const userController = {
 
     // Get all users
     getUsers(req, res) {
         User.find()
-            .then((users) => res.json(users))
-            .catch((err) => res.status(500).json(err));
-        },
+            .then(async(users) => 
+            !users
+            ? res.status(500).json({ message: 'No users found!'})
+            : res.json(users)
+        )
+    },
 
     // Get a single user by ID
     getSingleUser(req, res) {
-        User.findOne({ _id: req.params.userId })
-            .select('-__v')
-            .then((user) =>
-                !user
-                ? res.status(404).json({ message: 'No user with that ID' })
-                : res.json(user)
-            )
-            .catch((err) => res.status(500).json(err));
+        User.findOne({ _id: req.params.Id })
+            .then(async (user) =>
+            !user
+            ? res.status(404).json({ message: 'No user with that ID!' })
+            : res.json(user))
+
+            .catch((err) => {
+                console.log(err);
+                return res.status(500).json(err);
+            });
         },
 
     // Create a new user
     createUser(req, res) {
         User.create(req.body)
-            .then((user) => res.json(user))
+            .then((userData) => res.json(userData))
             .catch((err) => res.status(500).json(err));
         },
+
+    // Update a user
+    updateUser(req, res) {
+        User.findOneAndUpdate(
+            {
+                _id: req.params.id
+            },
+            {
+                $set: req.body
+            },
+            {
+                runValidators: true,
+                new: true
+            }
+        ).then((user) => {
+            !user 
+                ? res.status(404).json({ message: 'No User' })
+                : res.json(user)
+            }
+        )
+    },
     
-    // Delete a user
+    // Delete a user and associated thoughts
     deleteUser(req, res) {
-        User.findOneAndDelete({ _id: req.params.userId })
+        User.findOneAndDelete({ _id: req.params.Id })
         .then((user) => 
             !user
-            ? res.status(404).json({ message: 'No user with that ID' })
-            : Application.deleteMany({ _id: { $in: user.applications } })
-        )
-            .then(() => res.json({ message: 'User deleted!' }))
-            .catch((err) => res.status(500).json(err));
+                ? res.status(404).json({ message: 'No user with that ID!' })
+                : Thought.deleteMany({ _id: { $in: user.applications } })
+            )
+            .then((thoughts) => 
+            !thoughts
+                ? res.status (404).json({ message: 'User deleted, no thoughts found' })
+                :res.json({ message: 'User and associated thoughts successfully deleted!' })
+            )
+            .catch((err) => {
+                console.log(err);
+                res.status(500).json(err);
+            }
+        );
     },
 
     // Add and update friends
-    addFriend({params}, res){
+    addFriend(req, res){
         User.findOneAndUpdate(
-            {_id: params.id},
-            {$push: {friends: params.friendID}},
+            {_id: req.params.id},
+            {$addToSet: {friends: req.params.friendID}},
             {runValidators: true, new: true}
         )
         .then(userData => {
@@ -56,10 +90,22 @@ const userController = {
         })
         .catch(err => res.status(400).json(err));
     },
-    deleteFriend({params}, res) {
 
-    }
-}
+    // Delete friend
+    deleteFriend(req, res) {
+        User.findOneAndUpdate(
+            { _id: req.params.id },
+            { $pull: { friends: req.params.friendID }},
+            { runValidators: true, new: true }
+        )
+        .then((user) => 
+            !user
+            ? res.status(404).json({ message: 'No friend found with that ID!'})
+            : res.json(user)
+        )
+        .catch((err) => res.status(500).json(err));
+    },
+};
 
 
 
