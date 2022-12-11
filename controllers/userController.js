@@ -1,6 +1,7 @@
 const { User, Thought } = require('../models');
 
 const userController = {
+//module.exports = {
 
     // Get all users
     getUsers(req, res) {
@@ -80,7 +81,7 @@ const userController = {
     addFriend(req, res){
         User.findOneAndUpdate(
             {_id: req.params.id},
-            {$addToSet: {friends: req.params.friendID}},
+            {$addToSet: {friends: req.body.friendID}},
             {runValidators: true, new: true}
         )
         .then(userData => {
@@ -97,7 +98,7 @@ const userController = {
     deleteFriend(req, res) {
         User.findOneAndUpdate(
             { _id: req.params.id },
-            { $pull: { friends: req.params.friendID }},
+            { $pull: { friends: req.body.friendID }},
             { runValidators: true, new: true }
         )
         .then((user) => 

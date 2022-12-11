@@ -1,11 +1,13 @@
 const { Thought, User } = require('../models');
 
-module.exports = {
+const thoughtController = {
+//module.exports = {
+
   // Get all thoughts
   getThoughts(req, res) {
-    Thought.find()
+    Thought.find({})
       .then((thought) => res.json(thought))
-      .catch((err) => res.status(500).json(err));
+      // .catch((err) => res.status(500).json(err));
   },
   // Get a single thought
   getSingleThought(req, res) {
@@ -20,7 +22,12 @@ module.exports = {
   // Create a thought
     createThought(req, res) {
     Thought.create(req.body)
-      .then((thought) => res.json(thought))
+      .then(({_id}) => User.findOneAndUpdate(
+        {_id: req.params.userID},
+        {$push:{thoughts: _id}},
+        {new: true}
+      ))
+      .then(data => res.json(data))
       .catch((err) => {
         console.log(err);
         return res.status(500).json(err);
@@ -88,3 +95,6 @@ module.exports = {
       .catch((err) => res.status(500).json(err));
   }
 };
+
+// Export thoughtController
+module.exports = thoughtController;
